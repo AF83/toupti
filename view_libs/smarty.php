@@ -4,6 +4,7 @@
  */
 class SmartyView extends ViewAdaptor
 {
+
     protected static $conf = array(
         'template_dir' => '',
         'compile_dir' => '',
@@ -17,6 +18,11 @@ class SmartyView extends ViewAdaptor
     public static function conf($conf)
     {
         self::$conf = $conf;
+    }
+    
+    public static function getTplExtension()
+    {
+        return '.tpl';
     }
 
     public function __construct($tpl = '', $params = array())

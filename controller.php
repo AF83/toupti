@@ -28,17 +28,17 @@ class Controller
         if(is_null($tpl))
         {
             // at least the file is the controller name.
-            $tpl = "$module.tpl";
+            $tpl = $module.View::getTplExtension();
         }
         if(strstr($tpl, '/') === FALSE)
         {
             // not path, so it's our controller template dir'
             $tpl = "$module/$tpl";
         }
-        if( strrpos($tpl, ".tpl") != (strlen($tpl) - 4) )
+        if( strrpos($tpl, View::getTplExtension()) != (strlen($tpl) - 4) )
         {
             // missing file extension. note the portnawak test :)
-            $tpl .= '.tpl';
+            $tpl .= View::getTplExtension();
         }
         return new View($tpl, $this->params);
     }

@@ -35,6 +35,15 @@ class View
         self::$view_class = $class_name;
     }
 
+    public static function getTplExtension()
+    {
+        if (is_null(self::$view_class)) 
+        {
+            throw new TouptiException(sprintf("The view class to use is not yet defined"));
+        }
+        return call_user_func_array(array(self::$view_class, 'getTplExtension'), array());
+    }
+
     public function __construct($tpl = '', $params = array())
     {
         $view_class = self::$view_class;
@@ -63,5 +72,13 @@ class View
     {
         $args = func_get_args();
         $this->_js = array_merge($this->_js, $args);
+    }
+
+    public static function partial($tpl, Array $params = array())
+    {
+        $v = new self('shared/'.$tpl);
+        foreach($params as $key => $value)
+            $v->assign($key, $value);
+        return $v->fetch();
     }
 }

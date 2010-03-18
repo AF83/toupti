@@ -169,6 +169,11 @@ class Toupti
             exit(0);
     }
 
+    public function redirect_to_back()
+    {
+        $this->redirect_to($this->request->getHeader('Referer'));
+    }
+
     private function setup_request()
     {
         // Parsing Request.

@@ -7,6 +7,8 @@ abstract class ViewAdaptor
     private $notifs = array();
 
     abstract public static function conf($conf); 
+    
+    abstract public static function getTplExtension(); 
 
     abstract public function __construct($tpl = '', $params = array());
 

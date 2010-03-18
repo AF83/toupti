@@ -5,6 +5,8 @@ require_once('simpletest/autorun.php');
 require_once('../toupti.php');
 require_once('../request.class.php');
 require_once('../route.php');
+require_once('../route_libs/namespace.php');
+require_once('../route_libs/resource.php');
 require_once('../controller.php');
 require_once('../view.php');
 require_once('../view_libs/adaptor.php');

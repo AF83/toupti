@@ -22,6 +22,10 @@ class MockView extends ViewAdaptor
     public function fetch($tpl = null)
     {
     }
+    public static function getTplExtension()
+    {
+        return '.tpl';
+    }
 }
 
 class TestView extends UnitTestCase

@@ -61,6 +61,11 @@ class HighwayToHeaven
         $this->add_route($route, $scheme);
     }
 
+    public function addNamespace($namespace, Array $params = array())
+    {
+        return new RouteNamespace($namespace, $params);
+    }
+
     /**
      * Add a new route to the internal dispatcher.
      *
@@ -149,7 +154,8 @@ class HighwayToHeaven
                 $params = array();
                 $action = $route['controller'];
                 $method = $route['action'];
-                // Logs::debug("matched: " . $rx . " controller: " . $action . " action: " . $method);
+                if(class_exists('Logs'))
+                    Logs::debug("matched: " . $rx . " controller: " . $action . " action: " . $method);
                 if ( count($matches) > 1 ) {
                     $params = $this->get_route_params($matches, $route);
                     unset($params['controller']);     // don't pollute $params
