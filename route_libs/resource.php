@@ -10,7 +10,7 @@ class RouteResource
     private $collection_tpl = '%ss';
     private $default_controller_scheme = '%ss';
     private $default_members = array('', 'show', 'edit', 'update', 'delete');
-    private $default_collections = array('', 'new', 'create');
+    private $default_collections = array('', 'liste', 'new', 'create');
     private $resource_routes = array(
                                       '%ss'             => array('controller' => '%s'),
                                       '%ss/new'         => array('controller' => '%s', 'action' => 'new'),
@@ -50,11 +50,19 @@ class RouteResource
             $this->addMember($member);
     }
 
+    private function buildNamedRouteForMember($member)
+    {
+        if(empty($member))
+            return sprintf('%s', $this->name);
+        return sprintf('%s_%s', $member, $this->name);
+    }
+
     public function addMember($action, Array $params = array())
     {
         $default_scheme = array(
                                 'controller' => sprintf($this->default_controller_scheme, $this->name),
                                 'action' => empty($action) ? 'show' : $action,
+                                'route_name' => $this->buildNamedRouteForMember($action),
                                );
         $scheme = array_merge($default_scheme, $params);
         $action = empty($action) ? '' : '/'.$action;
@@ -76,11 +84,19 @@ class RouteResource
         }
     }
 
+    private function buildNamedRouteForCollection($collection)
+    {
+        if(empty($collection))
+            return sprintf('%ss', $this->name);
+        return sprintf('%s_%ss', $collection, $this->name);
+    }
+
     public function addCollection($action, Array $params = array())
     {
         $default_scheme['controller'] = sprintf($this->default_controller_scheme, $this->name);
         if(!empty($action))
             $default_scheme['action'] = $action;
+        $default_scheme['route_name'] = $this->buildNamedRouteForCollection($action);
         $scheme = array_merge($default_scheme, $params);
         $action = empty($action) ? '' : '/'.$action;
         $this->addRoute(sprintf($this->collection_tpl.$action, $this->name, $this->name), $scheme);
@@ -103,8 +119,6 @@ class RouteResource
 
     private function addRoute($route, $scheme)
     {
-        //we could define route names the following way
-        //$route_name = isset($scheme[':id']) ? $this->name.'_'.$scheme['action'] : $this->name.'s';
         $this->routes[$route] = $scheme;
         if(!is_null($this->linked_namespace))
             $this->addRouteToLinkedNamespace($route);

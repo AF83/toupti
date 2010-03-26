@@ -40,6 +40,7 @@ class RouteNamespace
     private function prepareRoute()
     {
         $this->prepareControllerPrefix();
+        $this->prepareNamedRoute();
         $this->current_route['route'] = implode('/', array($this->name, $this->current_route['route']));
     }
 
@@ -48,5 +49,11 @@ class RouteNamespace
         $prefix = isset($this->params['controller_prefix']) ? $this->params['controller_prefix'] : ucfirst(strtolower($this->name));
         $controller = !isset($this->current_route['scheme']['controller']) ? $this->current_route['route'] : $this->current_route['scheme']['controller'];
         $this->current_route['scheme']['controller'] = empty($prefix) ? $controller : $prefix.ucfirst($controller);
+    }
+
+    private function prepareNamedRoute()
+    {
+        if(!isset($this->current_route['scheme']['route_name'])) return;
+        $this->current_route['scheme']['route_name'] = sprintf('%s_%s', $this->name, $this->current_route['scheme']['route_name']);
     }
 }

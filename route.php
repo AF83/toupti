@@ -17,6 +17,8 @@ class HighwayToHeaven
 
     private $routes = array('' => 'index', ':action' => ':action');
 
+    private $named_routes = array();
+
     private function __construct()
     {
     }
@@ -121,6 +123,90 @@ class HighwayToHeaven
 
         // Add new route
         $this->_routes [] = $route;
+        if(isset($scheme['route_name']))
+            $this->nameRouteAfter($path, $scheme['route_name']);
+    }
+
+    public function __call($name, $arguments)
+    {
+        $matches = array();
+        if(preg_match('/(?P<name>\w+)_(?P<type>url|path)$/', $name, $matches))
+            return $this->buildNamedRouteFor($matches, $arguments);
+        throw new Exception(sprintf('The method %s does not exist in %s', $name, get_class($this)));
+    }
+
+    private function nameRouteAfter($path, $route_name)
+    {
+        if(!isset($this->named_routes[$route_name]))
+            $this->named_routes[$route_name] = $path;
+        else
+            throw new TouptiException(sprintf('The route name %s is already defined and leads to %s', $route_name, $this->named_routes[$route_name]));
+    }
+
+    private function prepareNamedRouteParams($params)
+    {
+        $ret = array();
+        foreach($params as $param)
+        {
+            if(is_object($param))
+            {
+                if(!($param instanceof Resourceable)) throw new TouptiException('The parameters given to build a route should be Resourcable Objects');
+                $ret[sprintf(':%s_id', $param->getResourceName())] = $param->getResourceIdentifier();
+            }
+            if(is_array($param))
+            {
+                foreach($param as $key => $val)
+                {
+                    if($key[0] == ':')
+                        $ret[$key] = $val;
+                }
+            }
+        }
+        $this->named_route_params = $ret;
+        return $ret;
+    }
+
+    private function replace_callbck($matches)
+    {
+        if(!isset($matches['identifier']))
+            $matches['identifier'] = $matches[1];
+        if(!isset($this->named_route_params[$matches['identifier']]))
+            throw new TouptiException(sprintf('%s url parameter required but was not found', $matches["identifier"]));
+        $this->found_matches[$matches['identifier']] = $this->named_route_params[$matches['identifier']];
+        return $this->named_route_params[$matches['identifier']].'/';
+    }
+
+    private function buildNamedRouteFor($route_name_type, Array $params)
+    {
+        $this->prepareNamedRouteParams($params);
+        extract($route_name_type);//initiate $name and $type vars
+        if(!isset($this->named_routes[$name]))
+            throw new TouptiException(sprintf('The route %s does not exist', $name));
+        $this->found_matches = array();
+        $path = '/'.preg_replace_callback('/(?P<identifier>:[^\/]+)\/?/', 
+                                       array($this, 'replace_callbck'),
+                                       $this->named_routes[$name]);
+        $query_string = $this->buildNamedRouteQueryString(array_diff($this->named_route_params, $this->found_matches));
+        $path .= $query_string;
+        unset($this->found_matches);
+        unset($this->named_route_params);
+        if($type == 'path')
+            return $path;
+        if($type == 'url')
+            return $_SERVER['HTTP_HOST'].$path;//FIXME should use toupti request object
+    }
+
+    private function buildNamedRouteQueryString($params)
+    {
+        $to_implode = array();
+        foreach($params as $key => $value)
+        {
+            $key = $key[0] == ':' ? substr($key, 1) : $key;
+            $to_implode []= sprintf('%s=%s', $key, $value);
+        }
+        if(!empty($to_implode))
+            return sprintf('?%s', implode('&', $to_implode));
+        return '';
     }
 
     /**
@@ -230,6 +316,37 @@ class HighwayToHeaven
             }
         }
         return $params;
+    }
+
+    public function urlFor($resource_name, Array $params = array())
+    {
+        if(isset($params['object']) && !($params['object'] instanceof Resourceable)) throw new TouptiException('The object should be Resourceable');
+
+        $to_implode = array();
+        if(isset($params['namespace']) && !empty($params['namespace']))
+            $to_implode []= $params['namespace'];
+        if(isset($params['action']))
+            $to_implode []= $params['action'];
+        $r = $resource_name;
+        $r .= !isset($params['object']) ? 's' : '';
+        $to_implode []= $r;
+        $to_implode []= 'path';
+        $path_method = implode('_', $to_implode);
+        $other_params = array();
+        foreach($params as $key => $value)
+        {
+            if($key[0] == ':')
+                $other_params[$key] = $value;
+        }
+        if(!isset($params['object']) && empty($other_params))
+            return call_user_func(array($this, $path_method)); 
+        else
+        {
+            if(isset($params['object']))
+                return call_user_func_array(array($this, $path_method), array($params['object'], $other_params)); 
+            else
+                return call_user_func_array(array($this, $path_method), array($other_params)); 
+        }
     }
 
 }
