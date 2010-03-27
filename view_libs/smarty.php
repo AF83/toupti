@@ -33,6 +33,11 @@ class SmartyView extends ViewAdaptor
         $this->smarty->cache_dir = self::$conf['cache_dir'];
         $this->smarty->config_dir = self::$conf['config_dir'];
         $this->smarty->plugins_dir []= self::$conf['plugins_dir'];
+        if(isset(self::$conf['php_handling']))
+        {
+            $this->smarty->allow_php_tag = true;
+            $this->smarty->php_handling = self::$conf['php_handling'];
+        }
 
         $this->tpl = $tpl;
         $this->params =  $params;
