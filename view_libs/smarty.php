@@ -42,6 +42,7 @@ class SmartyView extends ViewAdaptor
         $this->tpl = $tpl;
         $this->params =  $params;
         $this->assign('params', $this->params);
+        $this->assign('routes', HighwayToHeaven::instance());
     }
 
     public function assign($key, $value)
