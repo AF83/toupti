@@ -37,8 +37,8 @@ class TouptiSocket
         $_SERVER['REQUEST_URI'] = $url;
         $_SERVER['REQUEST_METHOD'] = $this->encoding->getMethod();
         View::useLib('MockTest');
+        View::conf($toupticonf['viewConf']);
         MocktestView::useLib($toupticonf['view'].'View');
-        MocktestView::conf($toupticonf['viewConf']);
         $this->toupti = Toupti::instance($this->toupticonf['toupti']);
         $this->response = $this->toupti->run();
         $this->first = true;
