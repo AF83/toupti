@@ -1,5 +1,6 @@
 <?php
 /* Copyright (c) 2009, Arnaud Berthomier
+ * Copyright (c) 2009-2010, AF83
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,6 +26,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @package Toupti
+ */
 class TouptiException extends Exception {}
 
 /**
@@ -50,14 +54,19 @@ class Toupti
     public $request = null;
 
     /**
+     * Response info
+     */
+    public $response = null;
+
+    /**
+     *
+     */
+    public $controller = null;
+
+    /**
      * The action we'll want to run...
      */
     public $action = null;
-
-    /**
-     * The methods chains to complete the action.
-     */
-    public $method = null;
 
     /**
      * Routing setup
@@ -76,6 +85,7 @@ class Toupti
         $this->setup_request();
         // Read user routes, and set-up internal dispatcher
         $this->setup_route();
+        $this->response = new TouptiResponse();
     }
 
     /**
@@ -107,20 +117,20 @@ class Toupti
     public function run()
     {
         // Find an action for the query, and set params accordingly.
-        list($action, $method, $params) = $this->route->find_route();
+        list($controller, $action, $params) = $this->route->find_route();
 
         // Update ourself
+        $this->controller = $controller;
         $this->action = $action;
-        $this->method = $method;
 
         // Merge route params with POST/GET values
         $params = array_merge($params, $_POST, $_GET); // FIXME Possible CSRF attacks here
         $this->params = $params;
 
         // Dispatch the routed action !
-        if (isset($action) && isset($method)) {
-            $controller = ucfirst($action)."Controller";
-            return $this->call_action($controller, $method, $params);
+        if (isset($controller) && isset($action)) {
+            $controller_class = ucfirst($controller)."Controller";
+            return $this->call_action($controller_class, $action, $params);
         } else {
             throw new TouptiException('Error 404 '. $this->request->original_uri, 404);
         }

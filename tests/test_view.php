@@ -4,6 +4,8 @@ class MockView extends ViewAdaptor
 {
     public static $var = array();
     public static $conf_setup = false;
+    public static $tpl = null;
+    public static $params = null;
     public static function conf($conf)
     {
         self::$conf_setup = true;
@@ -11,20 +13,27 @@ class MockView extends ViewAdaptor
 
     public function __construct($tpl, $params)
     {
+        self::$tpl = $tpl;
+        self::$params = $params;
     }
+
     public function assign($key, $value)
     {
         self::$var[$key] = $value;
     }
+
+    public function get($key = null)
+    {
+        return self::$var[$key];
+    }
+
     public function display($tpl = null)
     {
     }
+
     public function fetch($tpl = null)
     {
-    }
-    public static function getTplExtension()
-    {
-        return '.tpl';
+        return implode(array_keys(self::$var), ',');
     }
 }
 

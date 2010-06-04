@@ -9,7 +9,7 @@ class MyRequestMapper extends RequestMapper
     {
         $this->_apache = $apache;
         $this->_headers = $headers;
-        
+
         parent::__construct();
     }
 
@@ -143,6 +143,13 @@ class TestRequest extends UnitTestCase
     {
         $this->setServerEnv('GET');
         $request = new MyRequestMapper(true, array('X-Requested-With' => 'XMLHttpRequest'));
+        $this->assertTrue($request->isXHR());
+    }
+
+    public function testIsXhrWithApacheIE()
+    {
+        $this->setServerEnv('GET');
+        $request = new MyRequestMapper(true, array('x-requested-with' => 'XMLHttpRequest'));
         $this->assertTrue($request->isXHR());
     }
 
