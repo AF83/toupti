@@ -14,6 +14,8 @@ abstract class ViewAdaptor
 
     abstract public function assign($key, $value);
 
+    abstract public function get($key = null);
+
     abstract public function display($tpl = null);
 
     abstract public function fetch($tpl = null);

@@ -61,4 +61,9 @@ class MocktestView extends ViewAdaptor
         return $this->view_object->fetch($tpl);
     }
 
+	    public static function getTplExtension()
+    {
+        return '.tpl';
+    }
+
 }
