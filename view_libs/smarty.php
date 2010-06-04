@@ -55,6 +55,11 @@ class SmartyView extends ViewAdaptor
         $this->smarty->assign($key, $value);
     }
 
+    public function get($key = null)
+    {
+         return $this->smarty->get_template_vars($key);
+    }
+
     public function display($tpl = null)
     {
         if(!is_null($tpl))
