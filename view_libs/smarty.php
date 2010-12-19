@@ -2,6 +2,7 @@
 /**
  * @package Toupti
  */
+
 class SmartyView extends ViewAdaptor
 {
     protected static $conf = array(
