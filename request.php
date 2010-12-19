@@ -115,11 +115,11 @@ private $possibleRequestMethods = array('GET', 'HEAD', 'POST', 'PUT', 'DELETE', 
 */
 public function __construct()
 {
-  $this->method       = $_SERVER['REQUEST_METHOD'];
+  $this->setRequestMethod($_SERVER['REQUEST_METHOD']);
   $this->accept       = $this->parseAcceptHeaders(isset($_SERVER['HTTP_ACCEPT']) ? $_SERVER['HTTP_ACCEPT'] : NULL);
   $this->headers      = $this->getRequestHeaders();
   $this->original_uri = $_SERVER['REQUEST_URI'];
-  $this->setRequestMethod();
+
 
   $this->resource = $this->extractQueryString();
   $this->get =  $_GET;
@@ -214,12 +214,15 @@ public function __toString() {
 /**
 * Set which method is used. Sets private variable such as isGet to true when method is matched (magic method isGet() can also be called)
 * return void
+* @fixme should we unset a previously set method in case we are overriding?
+* @fixme why are there three methods  for this (magic getter, public properties and method property????)
 */
-private function setRequestMethod()
+private function setRequestMethod($requestMethod)
 {
-  if (in_array($_SERVER['REQUEST_METHOD'], $this->possibleRequestMethods))
-  {
-    $m = "is".ucfirst(strtolower($_SERVER['REQUEST_METHOD']));
+  if (in_array($requestMethod, $this->possibleRequestMethods) )
+  {   
+	$this->method       = $requestMethod;
+    $m = "is".ucfirst(strtolower($requestMethod));
     $this->$m = true;
   }
 }
@@ -491,12 +494,13 @@ private function getHttpHeaders() {
 */
 private function checkForHttpMethodOverride() {
   if ( array_key_exists('_METHOD', $this->post) ) {
-    $this->method = $this->post['_METHOD'];
+	$this->setRequestMethod($this->post['_METHOD']);
     unset($this->post['_METHOD']);
     if ( $this->method === "PUT" ) {
       $this->put = $this->post;
     }
-  }
+    
+	}
 }
 
 }
