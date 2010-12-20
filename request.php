@@ -58,6 +58,26 @@ public $original_uri;
 * @var string 
 */
 public $resource;
+
+/**
+ * @var array GET paramters' names and values
+ */
+private $get;
+
+/**
+ * @var array POST paramters' names and values
+ */
+private $post;
+
+/**
+ * @var array PUT paramters' names and values
+ */
+private $put;
+
+/**
+ * @var string Raw request input (for POST and PUT requests)
+ */
+private $input;
 /**
 *
 * @var array Request Headers
@@ -174,22 +194,6 @@ protected function getFastCgiRequestHeaders()
   }
   return $ret;
 }
-/**
-* Magic Getter for HTTP Methods , an extremply convulted way to know the type of the request.
-* @example $r = new Request; $r->isGet(); will return true for a get Request.  $r->isChuckNorris(); will return false
-*
-* @todo Please refactor this 
-* @param string $name the name of the missing getter method being called
-* @return boolean
-*/
-public function __get($name)
-{
-  if ($this->isRequestMethodName($name))
-  {
-    return $this->$name;
-  }
-  return null;
-}
 
 /**
 * Magic To string method, returning  three lines of text represing the called url, the method and the accept content type header.
@@ -228,23 +232,6 @@ private function setRequestMethod($requestMethod)
 }
 
 
-/**
-* Case insensitive check if a string is a valid HTTP Request method with "is" prefixed, IE true for isGET, idPut, isdelete. False for: isChuckNorris
-*
-* @param string $name name of the request method
-* @return boolean
-*/
-private function isRequestMethodName($name)
-{
-  foreach($this->possibleRequestMethods as $rm)
-  {
-    if('is'.ucfirst(strtolower($rm)) == $name)
-    {
-      return true;
-    }
-  }
-  return false;
-}
 
 /**
 * Returns possible request methods
@@ -297,6 +284,44 @@ public function isXHR()
 }
 
 /**
+* Returns True if method is get
+*
+* @return Boolean
+*/
+public function isGet()
+{
+ return $this->isGet;
+}
+/**
+* Returns True if method is get
+*
+* @return Boolean
+*/
+public function isPost()
+{
+ return $this->isPost;
+}
+/**
+* Returns True if method is get
+*
+* @return Boolean
+*/
+public function isPut()
+{
+ return $this->isPut;
+}
+/**
+* Returns True if method is get
+*
+* @return Boolean
+*/
+public function isDelete()
+{
+ return $this->isDelete;
+}
+
+
+/**
 * Parses the accept (content type) headers from the HTTP Request, defaults to text/html in a very convulted manner
 *
 * @param string $accept_header 
@@ -333,6 +358,50 @@ private function parseAcceptHeaders($accept_header, $default="text/html")
 	//weird ie6 bug sometimes doesn't send headers so fighing notice here
 	//@todo verify this added isset() maybe changing logic. Anyway $formats[$format] would basically always be false for application/xhtml and application/xml see the formats array. This is probably an oversight
   if ($format && isset($formats[$format]))   return array($format, $formats[$format]);   
+}
+
+/**
+* Add a PUT|POST|GET parameter
+*
+* Allow to add a parameter to a PUT POST or GET request
+* PUT, POST, or GET parameter (searched in that order).
+* if the para
+* @param  string    $method (GET / PUT  / POST)
+* @param  string    $key The paramter name
+* @param  string    $value The paramter value to be set
+* @return   void
+*/
+
+public function addParam ($method, $key, $value ) {
+  $method=strtolower($method);
+  if ( is_null($this->params($key))) {
+	switch ($method){
+		case "get": $this->get[$key]=$value ;break;
+		case "post": $this->post[$key]=$value ;break;
+		case "put": $this->put[$key]=$value ;break;
+		}
+	};
+}
+
+/**
+* Fetch PUT|POST|GET parameter
+*
+* Allow to remove a parameter from a PUT POST or GET request
+* PUT, POST, or GET parameter (searched in that order).
+* 
+* @param  string    $key The paramter name
+* @return   string|null
+*/
+public function removeParam ($key ) {
+  if ( isset($this->put[$key]) ) {
+    unset ($this->put[$key]);
+  }
+  if ( isset($this->post[$key]) ) {
+    unset ($this->put[$key]);
+  }
+  if ( isset($this->get[$key]) ) {
+    unset ($this->put[$key]);
+  }
 }
 
 /* from slim*/
@@ -504,6 +573,5 @@ private function checkForHttpMethodOverride() {
 }
 
 }
-
 
 class RequestMapper extends Request {} // Compatability with earlier Toupti
