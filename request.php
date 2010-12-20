@@ -60,6 +60,11 @@ public $original_uri;
 public $resource;
 
 /**
+* Host name (excluding the application directory path)
+* @var string 
+*/
+public $host;
+/**
  * @var array GET paramters' names and values
  */
 private $get;
@@ -139,6 +144,7 @@ public function __construct()
   $this->accept       = $this->parseAcceptHeaders(isset($_SERVER['HTTP_ACCEPT']) ? $_SERVER['HTTP_ACCEPT'] : NULL);
   $this->headers      = $this->getRequestHeaders();
   $this->original_uri = $_SERVER['REQUEST_URI'];
+  $this->host         = $this->getRequestHost();
 
 
   $this->resource = $this->extractQueryString();
@@ -164,6 +170,25 @@ protected function getRequestHeaders()
   }
   return $this->getFastCgiRequestHeaders();
 }
+
+/**
+* Get Request headers, normalize between apache and FastCGI
+*
+* @return array of request headers
+*/
+protected function getRequestHost()
+{
+
+	if (isset($_SERVER["HTTP_X_FORWARDED_HOST"])){$vhost=$_SERVER["HTTP_X_FORWARDED_HOST"];}
+	        else
+	            {
+	            if (isset ($_SERVER["HTTP_HOST"])) $vhost = $_SERVER["HTTP_HOST"];
+	                else
+	            $vhost = $_SERVER["SERVER_NAME"];
+	            }
+return $vhost;
+}
+
 
 /**
 * Get Request Apache request headers
@@ -374,9 +399,10 @@ private function parseAcceptHeaders($accept_header, $default="text/html")
 
 public function addParam ($method, $key, $value ) {
   $method=strtolower($method);
+
   if ( is_null($this->params($key))) {
 	switch ($method){
-		case "get": $this->get[$key]=$value ;break;
+		case "get": $this->get[$key]=$value ; break;
 		case "post": $this->post[$key]=$value ;break;
 		case "put": $this->put[$key]=$value ;break;
 		}
