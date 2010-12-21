@@ -405,6 +405,7 @@ public function addParam ($method, $key, $value ) {
 		case "get": $this->get[$key]=$value ; break;
 		case "post": $this->post[$key]=$value ;break;
 		case "put": $this->put[$key]=$value ;break;
+		case "delete": $this->get[$key]=$value ; ;break; // should we do this. Or should we call "GET" params something else like "URL" params. This seems like a very bad habit from PHP $_GET
 		}
 	};
 }
