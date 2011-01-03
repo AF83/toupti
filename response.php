@@ -6,6 +6,8 @@ class TouptiResponse
 {
     protected $headers = array();
 
+    public $body = null;
+
     protected static $phrases = array(
 
         // 1xx: Informational - Request received, continuing process
@@ -88,9 +90,7 @@ class TouptiResponse
      */
     public function get_header($header)
     {
-        if (array_key_exists($header, $this->headers))
-            return $this->headers[$header];
-        return null;
+        return isset($this->headers[$header]) ? $this->headers[$header] : null;
     }
     /**
      * Return all HTTP headers
@@ -100,4 +100,58 @@ class TouptiResponse
     {
         return $this->headers;
     }
+
+    /**
+     * Set headers for sending file. note that it's not setting the body.
+     * @param String $mimetype mimetype of the document
+     * @param String $filename name of the document
+     * @param Mixed $body content of the file
+     * @todo TouptiResponse looks like a good candidate to host this method.
+     * @return the file
+     */
+    public function sendFile($mimetype, $filename)
+    {
+        $this->set_header('Content-Type', $mimetype);
+        $this->set_header('Pragma', 'public'); // required
+        $this->set_header('Expires', '0');
+        $this->set_header('Cache-Control', 'cache, must-revalidate');
+        $this->set_header('Content-Disposition', 'attachment; filename="'. $filename .'";');
+        $this->set_header('Content-Transfer-Encoding', 'binary');
+    }
+
+    /**
+     * Time to send the job.
+     * return the raw Response (header and body) to the client.
+     */
+    public function send()
+    {
+        header('Content-type: text/html; charset=utf-8');
+        // send headers
+        $headers = $this->get_headers();
+        $content = 'HTTP/1.1 200 OK';
+        if (isset($headers['Status']))
+        {
+            $content = $headers['Status'];
+            unset($headers['Status']);
+        }
+        header($content, true);
+        foreach ($headers as $n => $v)
+        {
+            header($n . ': '. $v);
+        }
+
+        echo $this->body;
+    }
+
+    /**
+     * Redirect to another path.
+     * @param  string    $path          Redirects to $path
+     * @return void
+     */
+    public function redirect($path = '')
+    {
+        $this->set_status(302);
+        $this->set_header('Location', $path);
+    }
+
 }

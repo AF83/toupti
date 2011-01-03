@@ -5,16 +5,32 @@
  */
 class Controller
 {
-    public $toupti = null;
-    public $params = array();
+    static $req = null;
+    static $res = null;
+    static $toupti = null;
 
     public function __construct()
     {
-        $this->toupti = Toupti::instance();
-        $this->params = $this->toupti->get_params();
+        // params and toupti are always here for migration, they must desapear.
+        $this->toupti = self::$toupti;
     }
 
-    /**
+    public static function setResponse($res)
+    {
+        self::$res = $res;
+    }
+
+    public static function setRequest($req)
+    {
+        self::$req = $req;
+    }
+
+    public static function setToupti($toupti)
+    {
+        self::$toupti = $toupti;
+    }
+
+   /**
      * Quick Alias to get a view.
      * @param tpl a full formated path (relative to the app/view one) to the tpl file to use. If tpl is not provide or
      * null, will use view/controller_name/controller_name.tpl. Without any path indication, file will be search in view/controller_name path/.
@@ -40,41 +56,44 @@ class Controller
             // missing file extension. note the portnawak test :)
             $tpl .= '.tpl';
         }
-        return new View($tpl, $this->params);
+        return new View($tpl, self::$req->params);
     }
+   
     /**
      * quick alias to exit without any layout.
+     * @deprecated
      */
     public function exit_ajax()
     {
-        return $this->toupti->request->isXHR();
+        return self::$req->isXHR();
     }
 
     /**
      * quick alias to exit without any layout.
+     * @deprecated
      */
     public function request()
     {
-        return $this->toupti->request;
+        return self::$req;
     }
     /**
      * Redirect to previous path or exists and outputs in ajax mode
      * @param  string    $ajaxoutput          What to output if we are in ajax mode
      * @param  array     $ajax_headers        Extra headers to output if existing in ajax (probably we will want to put here an x-ajax-referrer)
      * @param  boolean   $redirect_to         if we want to fall back on something in case referrer is not here
+     * @deprecated
      * @return void
      */
-    public function redirect_to_referrer_or_exit_ajax($ajaxoutput="", $ajax_headers=array(),$redirect_to="/")
+    public function redirect_to_referrer_or_exit_ajax($ajaxoutput = "", $ajax_headers = array(), $redirect_to = "/")
     {
         if($this->exit_ajax())
         {
-            foreach($ajax_headers as $ajax_header) { header($ajax_header); }
-            echo $ajaxoutput instanceof View ? $ajaxoutput->fetch(): $ajaxoutput;
-            exit;
+            self::$res->set_header($ajax_headers);
+            self::$res->body = ($ajaxoutput instanceof View ? $ajaxoutput->fetch(): $ajaxoutput);
         }
         else
         {
-            $this->toupti->redirect_to(isset($_SERVER['HTTP_REFERER'] ) ? $_SERVER['HTTP_REFERER'] : $redirect_to);
+            self::$req->redirect(isset($_SERVER['HTTP_REFERER'] ) ? $_SERVER['HTTP_REFERER'] : $redirect_to);
         }
     }
 

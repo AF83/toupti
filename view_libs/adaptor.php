@@ -18,6 +18,8 @@ abstract class ViewAdaptor
 
     abstract public function fetch($tpl = null);
 
+    abstract public function compile($tpl = null);
+
     /**
      * @return Array notifs accumulator.
      */

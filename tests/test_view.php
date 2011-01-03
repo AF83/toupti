@@ -35,6 +35,11 @@ class MockView extends ViewAdaptor
     {
         return implode(array_keys(self::$var), ',');
     }
+
+    public function compile($tpl =null)
+    {
+        return true;
+    }
 }
 
 class TestView extends UnitTestCase

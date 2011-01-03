@@ -6,32 +6,19 @@ class RouteException extends Exception {}
 /**
  * @package Toupti
  */
-class HighwayToHeaven
+class Route
 {
 
     private $request = null;
-
-    private static $instance = null;
 
     private $app_root = null;
 
     private $routes = array('' => 'index', ':action' => ':action');
 
-    private function __construct()
+    public function __construct()
     {
     }
 
-    public static function destroy()
-    {
-        HighwayToHeaven::$instance = NULL;
-    }
-
-    public static function instance()
-    {
-        if(is_null(HighwayToHeaven::$instance))
-            HighwayToHeaven::$instance = new HighwayToHeaven();
-        return HighwayToHeaven::$instance;
-    }
 
     public function setRequest(RequestMapper $request)
     {
@@ -149,6 +136,7 @@ class HighwayToHeaven
                 $params = array();
                 $action = $route['controller'];
                 $method = $route['action'];
+                $path_key = $route['path'];
                 // Logs::debug("matched: " . $rx . " controller: " . $action . " action: " . $method);
                 if ( count($matches) > 1 ) {
                     $params = $this->get_route_params($matches, $route);
@@ -157,7 +145,7 @@ class HighwayToHeaven
                 break;
             }
         }
-        return array($action, $method, $params);
+        return array($action, $method, $params, $path_key);
     }
 
     /**
@@ -225,5 +213,8 @@ class HighwayToHeaven
         }
         return $params;
     }
-
+    
+    public function getComputedRoutes() {
+        return $this->_routes;
+    }
 }

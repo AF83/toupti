@@ -4,9 +4,7 @@ class TestRoute extends UnitTestCase
 {
     public function setUp()
     {
-        // I hate singleton
-        HighwayToHeaven::destroy();
-        $this->route = HighwayToHeaven::instance();
+        $this->route = new Route(array('routes' => realpath(dirname( __FILE__ ) . '/test_app/routes.php')));
     }
 
     protected function assertRouteResult($controller, $action, $params)

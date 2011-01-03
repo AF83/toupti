@@ -70,4 +70,18 @@ class SmartyView extends ViewAdaptor
         }
         return $this->smarty->fetch($this->tpl);
     }
+
+    public function compile($tpl = null)
+    {
+        if(!is_null($tpl))
+        {
+            $this->tpl = $tpl;
+        }
+        if($this->tpl == '')
+        {
+            return;
+        }
+        return $this->smarty->createTemplate($this->tpl)->compileTemplateSource();
+    }
+
 }

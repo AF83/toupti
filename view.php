@@ -9,7 +9,7 @@ class View
 
     protected $view_object = NULL;
 
-    protected static $conf = array(
+    public static $conf = array(
     );
 
     public $_js = array();

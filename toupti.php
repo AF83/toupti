@@ -39,11 +39,6 @@ class TouptiException extends Exception {}
 class Toupti
 {
     /**
-     * Current config
-     */
-    public $conf = null;
-
-    /**
      * Parameters from _GET, _POST, and defined routes.
      */
     protected $params = array();
@@ -69,6 +64,11 @@ class Toupti
     public $action = null;
 
     /**
+     * route key who solve the request.
+     */
+    public $path_key = null;
+    
+    /**
      * Routing setup
      */
     private $route = null;
@@ -77,31 +77,9 @@ class Toupti
 
     /**
      * Toupti constructor
-     * @param Array $conf
      */
-    private function __construct($conf)
+    public function __construct()
     {
-        $this->conf = $conf;
-        $this->setup_request();
-        // Read user routes, and set-up internal dispatcher
-        $this->setup_route();
-        $this->response = new TouptiResponse();
-    }
-
-    /**
-     * get instance of toupti
-     * @param $conf
-     */
-    public static function instance($conf = null)
-    {
-        if(is_null(self::$_instance))
-            self::$_instance = new self($conf);
-        return self::$_instance;
-    }
-
-    public static function destroy()
-    {
-        self::$_instance = null;
     }
 
     public function get_params()
@@ -112,25 +90,32 @@ class Toupti
     /**
      * Dispatch browser query to the appropriate action.
      * This our "main" entry point.
+     * @todo move $route params to the constructor.
      * @return void
      */
-    public function run()
+    public function run($route, $req, $res)
     {
+        $this->route = $route;
+        $this->request = $req;
+        $this->response = $res;
+        $this->route->setRequest($this->request);
+
         // Find an action for the query, and set params accordingly.
-        list($controller, $action, $params) = $this->route->find_route();
+        list($controller, $action, $params, $path_key) = $this->route->find_route();
 
         // Update ourself
         $this->controller = $controller;
         $this->action = $action;
+        $this->path_key = $path_key;
 
         // Merge route params with POST/GET values
         $params = array_merge($params, $_POST, $_GET); // FIXME Possible CSRF attacks here
-        $this->params = $params;
+        $this->request->params = $params;
 
         // Dispatch the routed action !
         if (isset($controller) && isset($action)) {
             $controller_class = ucfirst($controller)."Controller";
-            return $this->call_action($controller_class, $action, $params);
+            $this->call_action($controller_class, $action);
         } else {
             throw new TouptiException('Error 404 '. $this->request->original_uri, 404);
         }
@@ -143,17 +128,22 @@ class Toupti
      * @param  string  $controller_name Name of the controller to call
      * @param  string  $method_name
      * @param  Array   $params Request parameters
+     * @todo, moving this to middleware would be great.
      */
-    private function call_action($controller_name, $method_name, $params)
+    private function call_action($controller_name, $method_name)
     {
         if($controller_name != 'Controller' && class_exists($controller_name, true))
         {
+            Controller::setToupti($this);
+            Logs::debug('XXX: '.Controller::$req);
             $controller = new $controller_name();
             if(method_exists($controller, $method_name))
             {
                 if($controller->isAuthorized($method_name))
                 {
-                    return $controller->$method_name();
+                    $this->response->body = $controller->$method_name();
+                    // \o/ good job, can exit now
+                    return;
                 }
                 else
                 {
@@ -166,38 +156,4 @@ class Toupti
         throw new TouptiException('Route error. Controller '. $controller_name . ' not found for '. $this->request->original_uri . '.', 404);
     }
 
-    /**
-     * Redirect to another path, and stops un
-     * @param  string    $path          Redirects to $path
-     * @param  boolean   $we_are_done   Stops PHP if true (defaults to true)
-     * @return void
-     */
-    public function redirect_to($path = '', $we_are_done = true)
-    {
-        header("Location: $path");
-        if ( $we_are_done )
-            exit(0);
-    }
-
-    private function setup_request()
-    {
-        // Parsing Request.
-        $this->request = new RequestMapper();
-    }
-
-    private function setup_route()
-    {
-        $routes_file = isset($this->conf['route_path']) ? $this->conf['route_path'] 
-            : dirname(__FILE__) . '/conf/routes.php';
-        if (file_exists($routes_file))
-        {
-            include $routes_file;
-        }
-        else
-        {
-            throw new TouptiException('No route defined. Please create '. $routes_file);
-        }
-        $this->route = HighwayToHeaven::instance();
-        $this->route->setRequest($this->request);
-    }
 }

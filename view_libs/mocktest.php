@@ -61,4 +61,10 @@ class MocktestView extends ViewAdaptor
         return $this->view_object->fetch($tpl);
     }
 
+    public function compile($tpl = null)
+    {
+        // @fixme ouhou, may be wrong code ...
+        return $this->view_object->compile();
+    }
+
 }

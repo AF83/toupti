@@ -10,8 +10,6 @@ class TouptiSocket
         $this->toupticonf = $toupticonf;
         $this->url = $url;
         $this->encoding = $encoding;
-        Toupti::destroy();
-        HighwayToHeaven::destroy();
         View::reset();
         $_SERVER  = array();
         $_GET     = array();
@@ -30,11 +28,23 @@ class TouptiSocket
         $url = $this->url->asString();
         $_SERVER['REQUEST_URI'] = $url;
         $_SERVER['REQUEST_METHOD'] = $this->encoding->getMethod();
+
+        // env is set, prepare our $req and $res object
+        $this->request = new RequestMapper();
+        $this->request->notify = array();
+        $this->response = new TouptiResponse();
+
+        // fix to handle middleware stack and Controller initialisation context.
+        Controller::setResponse($this->response);
+        Controller::setRequest($this->request);
+        
         View::useLib('MockTest');
         View::conf($toupticonf['viewConf']);
         MocktestView::useLib($toupticonf['view'].'View');
-        $this->toupti = Toupti::instance($this->toupticonf['toupti']);
-        $this->response = $this->toupti->run();
+
+        $this->toupti = new Toupti();
+        require $this->toupticonf['toupti']['routes'];
+        $this->toupti->run($route, $this->request, $this->response);
         $this->first = true;
     }
 
@@ -72,7 +82,7 @@ class TouptiSocket
         if ($this->first)
         {
             $this->first = false;
-            $headers = $this->toupti->response->get_headers();
+            $headers = $this->response->get_headers();
             $content = 'HTTP/1.1 200 OK'."\r\n";
             if (isset($headers['Status']))
             {
@@ -83,7 +93,7 @@ class TouptiSocket
             {
                 $content .= $n . ': '. $v . "\r\n";
             }
-            return $content ."\r\n" . ($this->response instanceOf View ? $this->response->fetch() : $this->response);
+            return $content ."\r\n" . ($this->response->body instanceOf View ? $this->response->body->fetch() : $this->response->body);
         }
         return '';
     }

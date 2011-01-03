@@ -23,14 +23,12 @@ class TestToupti extends UnitTestCase
 {
     public function setUp()
     {
-        Toupti::destroy();
-        HighwayToHeaven::destroy();
     }
     
     public function testExceptionWithoutRouteConf()
     {
         $this->expectException(new TouptiException('No route defined. Please create '. realpath(dirname(__FILE__) . '/..')  .'/conf/routes.php'));
-        $toupti = Toupti::instance();
+        $toupti = new Toupti(array());
     }
 
     public function testExceptionWithRouteConf()
