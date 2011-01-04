@@ -1,110 +1,115 @@
 <?php
 
+/**
+ * @see route.php l136: removing params prefixed with ":", and to be test.
+ */
 class TestRoute extends UnitTestCase
 {
     public function setUp()
     {
-        $this->route = new Route(array('routes' => realpath(dirname( __FILE__ ) . '/test_app/routes.php')));
+        include realpath(dirname( __FILE__ ) . '/testapp/routes.php');
+        $this->route = $routes;
     }
 
-    protected function assertRouteResult($controller, $action, $params)
+    protected function assertRouteResult($path, $def, $params, $route_path)
     {
-        $result = $this->route->find_route();
-        $this->assertEqual($controller, $result[0]);
-        $this->assertEqual($action, $result[1]);
-        $this->assertEqual($params, $result[2]);
+        $result = $this->route->find_route($path);
+        $this->assertEqual($def, $result[0]);
+        $this->assertEqual($params, $result[1]);
+        $this->assertEqual($route_path, $result[2]);
     }
 
     public function testAddRouteAndFind()
     {
-        $_SERVER['REQUEST_URI'] = '/test';
-        $this->route->add('test', array('controller' => 'test'));
-        $this->assertRouteResult('test', 'adefault', array());
+        $scheme = array('controller' => 'test');
+        $this->route->add('test', $scheme);
+        $this->assertRouteResult('/test', $scheme, $scheme,  'test');
     }
 
     public function testAddRouteWithActionAndFind()
     {
-        $_SERVER['REQUEST_URI'] = '/test';
-        $this->route->add('test', array('controller' => 'test', 'action' => 'foo'));
-        $this->assertRouteResult('test', 'foo', array());
+        $scheme = array('controller' => 'test', 'action' => 'foo');
+        $this->route->add('test', $scheme);
+        $this->assertRouteResult('/test', $scheme, $scheme, 'test');
     }
 
     public function testAddAndFindWithQueryString()
     {
-        $_SERVER['REQUEST_URI'] = '/test?bar=';
-        $this->route->add('test', array('controller' => 'test', 'action' => 'foo'));
-        $this->assertRouteResult('test', 'foo', array());
+        $scheme = array('controller' => 'test', 'action' => 'foo');
+        $this->route->add('test', $scheme);
+        $this->assertRouteResult('/test?bar=', $scheme, $scheme, 'test');
     }
 
     public function testAddRouteAndNoMatch()
     {
-        $_SERVER['REQUEST_URI'] = '/test2';
-        $this->route->add('test', array('controller' => 'test', 'action' => 'foo'));
-        $this->assertRouteResult('', '', array());
+        $this->expectException(new RouteNotFound());
+        $this->route->find_route('/test2011');
     }
 
     public function testAddRouteWithParam()
     {
-        $_SERVER['REQUEST_URI'] = '/test/norris';
-        $this->route->add('test/:chuck', array('controller' => 'test', 'action' => 'foo', ':chuck' => '[a-z]+'));
-        $this->assertRouteResult('test', 'foo', array('chuck' => 'norris'));
+        $scheme = array('controller' => 'test', 'action' => 'foo', ':chuck' => '[a-z]+');
+        $this->route->add('test/:chuck', $scheme);
+        $this->assertRouteResult('/test/norris', $scheme, array('chuck' => 'norris', 'controller' => 'test', 'action' => 'foo'), 'test/:chuck');
     }
 
-    public function testAddRouteWithDifferentParam()
+    public function testAddRouteWithEmptyParam()
     {
-        $_SERVER['REQUEST_URI'] = '/test/';
-        $this->route->add('test/:chuck', array('controller' => 'test', 'action' => 'foo', ':chuck' => '[a-z]*'));
-        $this->assertRouteResult('test', 'foo', array('chuck' => ''));
+        $scheme = array('controller' => 'test', 'action' => 'foo', ':chuck' => '[a-z]*');
+        $this->route->add('test/:chuck', $scheme);
+        $this->assertRouteResult('/test/', $scheme, array('chuck' => '', 'controller' => 'test', 'action' => 'foo'), 'test/:chuck');
     }
 
     public function testRouteWithParamNoMatch()
     {
-        $_SERVER['REQUEST_URI'] = '/test/';
-        $this->route->add('test/:chuck', array('controller' => 'test', 'action' => 'foo', ':chuck' => '[a-z]+'));
-        $this->assertRouteResult('', '', array());
+        $scheme = array('controller' => 'test', 'action' => 'foo', ':chuck' => '[a-z]+');
+        $this->route->add('test/:chuck', $scheme);
+        $this->expectException(new RouteNotFound());
+        $this->route->find_route('/test/');
     }
 
     public function testRouteWith2Params()
     {
-        $_SERVER['REQUEST_URI'] = '/test/not/possible';
-        $this->route->add('test/:chuck/:norris', array('controller' => 'test',
-                                                       'action'     => 'foo',
-                                                       ':chuck'     => '[a-z]+',
-                                                       ':norris'    => '[a-z]+'));
-        $this->assertRouteResult('test', 'foo', array('chuck'  => 'not',
-                                                      'norris' => 'possible'));
+        $scheme = array(
+            'controller' => 'test',
+            'action'     => 'foo',
+            ':chuck'     => '[a-z]+',
+            ':norris'    => '[a-z]+');
+        $this->route->add('test/:chuck/:norris', $scheme);
+        $this->assertRouteResult('/test/not/possible', $scheme, array('chuck'  => 'not', 'norris' => 'possible', 'controller' => 'test', 'action' => 'foo'), 'test/:chuck/:norris');
     }
 
     public function testRouteParamNotRestrict()
     {
-        $_SERVER['REQUEST_URI'] = '/test/not/possible';
-        $this->route->add('test/:chuck/:norris', array('controller' => 'test',
-                                                       'action'     => 'foo',
-                                                       ':chuck'     => '(.*)',
-                                                       ':norris'    => '[a-z]+'));
-        $this->assertRouteResult('test', 'foo', array('chuck'  => 'not',
-                                                      'norris' => 'not'));  // buggy
+        $scheme = array(
+            'controller' => 'test',
+            'action'     => 'foo',
+            ':chuck'     => '(.*)',
+            ':norris'    => '[a-z]+');
+        $this->route->add('test/:chuck/:norris', $scheme);
+        $this->assertRouteResult(
+            '/test/not/possible',
+            $scheme, array('chuck'  => 'not', 'norris' => 'not', 'controller' => 'test', 'action' => 'foo'),
+            'test/:chuck/:norris');  // buggy
     }
 
-    public function testAddRouteWithoutController()
+    public function testAddRouteWithoutScheme()
     {
-        $this->expectException(new Exception('Invalid route for path: /test'));
-        $this->route->add('/test', array(''));
+        $this->route->add('test');
+        $this->assertRouteResult('/test', null, array(), 'test');
     }
 
     public function testRouteWithParamsNoRegexp()
     {
-        $_SERVER['REQUEST_URI'] = '/test/not/possible';
-        $this->route->add('test/:chuck/:norris', array('controller' => 'test', 'action'     => 'foo'));
-        $this->assertRouteResult('test', 'foo', array('chuck'  => 'not', 'norris' => 'possible'));
+        $scheme = array('controller' => 'test', 'action' => 'foo');
+        $this->route->add('test/:chuck/:norris', $scheme);
+        $this->assertRouteResult('/test/not/possible', $scheme, array('controller' => 'test', 'action' => 'foo', 'chuck'  => 'not', 'norris' => 'possible'), 'test/:chuck/:norris');
     }
 
     public function testRouteWithParamsNoRegexpButDeclared()
     {
-        $_SERVER['REQUEST_URI'] = '/test/not/possible';
-        $this->route->add('test/:chuck/:norris', array('controller' => 'test',
-                                                       'action'     => 'foo',
-                                                       ':chuck', ':norris'));
-        $this->assertRouteResult('test', 'foo', array('chuck'  => 'not', 'norris' => 'possible'));
+        $scheme = array('controller' => 'test', 'action' => 'foo', ':chuck', ':norris');
+        $this->route->add('test/:chuck/:norris', $scheme);
+        $this->assertRouteResult('/test/not/possible', $scheme, array('controller' => 'test', 'action' => 'foo', 'chuck'  => 'not', 'norris' => 'possible'), 'test/:chuck/:norris');
     }
 }

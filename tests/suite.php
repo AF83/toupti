@@ -1,18 +1,18 @@
 <?php
-
+$root_path = dirname(__FILE__) . '/..';
 require_once('simpletest/autorun.php');
 require_once('simpletest/web_tester.php');
 
-require_once('../toupti.php');
-require_once('../testcase.php');
-require_once('../request.php');
-require_once('../response.php');
-require_once('../route.php');
-require_once('../controller.php');
-require_once('../view.php');
-require_once('../view_libs/adaptor.php');
-require_once('../view_libs/smarty.php');
-require_once('../view_libs/mocktest.php');
+require_once($root_path . '/toupti.php');
+require_once($root_path . '/testcase.php');
+require_once($root_path . '/request.php');
+require_once($root_path . '/response.php');
+require_once($root_path . '/route.php');
+require_once($root_path . '/controller.php');
+require_once($root_path . '/view.php');
+require_once($root_path . '/view_libs/adaptor.php');
+require_once($root_path . '/view_libs/smarty.php');
+require_once($root_path . '/view_libs/mocktest.php');
 
 class TouptiTestSuite extends TestSuite
 {

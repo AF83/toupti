@@ -1,6 +1,6 @@
 <?php
 
-$routes = HighwayToHeaven::instance();
+$routes = new Route();
 
 $routes->add('', array('controller' => 'TestApp'));
 $routes->add('index', array('controller' => 'TestApp', 'action' => 'index'));

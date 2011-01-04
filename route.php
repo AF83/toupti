@@ -34,77 +34,45 @@
 *
 * @package Toupti
 * @author AF83 Arnaud Berthommier, François de Metz, Gilles Robit, Luc-Pascal Ceccaldi, Ori Pekleman
-*/
+ */
+
 /**
  * @package Toupti
  */
 class RouteException extends Exception {}
+
+/**
+ * @package Toupti
+ */
+class RouteNotFound extends RouteException {}
+
 /**
  * @package Toupti
  */
 class Route
 {
 
-    private $request = null;
-
     private $app_root = null;
-
-    private $routes = array('' => 'index', ':action' => ':action');
+    private $_routes = array();
 
     public function __construct()
     {
     }
 
-
-    public function setRequest(RequestMapper $request)
-    {
-        if(!is_null($this->request)) throw New RouteException('Request is already set for this instance');
-        $this->request = $request;
-    }
-
-    public function add($route, Array $scheme = array())
-    {
-        /**
-         * if nothing defined, controller is the name of the route
-         * FIXME, this can be dangerous if you give a strange route, should be checked and throw an exception
-         */
-        if(empty($scheme))
-        {
-            $scheme = array('controller' => $route);
-        }
-        // default HTTP method is GET
-        if(!array_key_exists('method', $scheme)) {
-            $scheme['method'] = 'GET';
-        }
-        // default action
-        if(!array_key_exists('action', $scheme)) {
-            $scheme['action'] = 'adefault';
-        }
-
-        $this->add_route($route, $scheme);
-    }
-
     /**
      * Add a new route to the internal dispatcher.
-     *
-     * @param  String  $path    Route path : a key from the user's routes
-     * @param  mixed   $scheme  Which controller to take for this $path
-     * @return Void
+     * Will set an internal array (key: the route path, $params: the blue print, $config: other hard params for this root).
+     * @param String $path Route path : a key from the user's routes
+     * @param String $scheme
      */
-    private function add_route($path, $scheme)
+    public function add($path, $scheme = null)
     {
-        $route = array('path'   => $path,
+        $route = array(
+            'path'   => $path,
             'rx'     => '',
-            'method'     => null,
-            'controller' => null,
-            'action'=> null);
+            'scheme' => $scheme);
 
-        if ( empty($scheme['controller']) )
-        {
-            throw new Exception('Invalid route for path: ' . $path, true);
-        }
-
-        // Escape path for rx (XXX use preg_quote ?)
+        // Escape path for rx
         $rx = str_replace('/', '\/', $path);
 
         // named path
@@ -133,59 +101,60 @@ class Route
             }
         }
 
-        $route['rx'] = '\/' . $rx . '\/?';
-        $route['controller'] = $scheme['controller'];
-        $route['action'] = $scheme['action'];
+        $route['rx'] =  '/^\/' . $rx . '\/?$/';
 
         // Add new route
-        $this->_routes [] = $route;
+        $this->_routes[] = $route;
     }
 
     /**
-     * Try to map browser request to one of the defined routes
-     *
-     * @return  Array   [0] => 'controller name', [1] => 'action_name', [2] => array( params... )
+     * Try to map browser request to one of the defined routes.
+     * @params String path, query string ignored.
+     * @return  Array  [0] => 'scheme', [1] => array( params... ), [2] => route_name
+     * @todo check on interest of returning scheme.
      */
-    public function find_route()
+    public function find_route($path)
     {
-        $action = null;
-        $method = null;
+        $found = false; 
+        $scheme = null;
         $params = array();
+        $route_path = null;
 
-        // Get the query string without the eventual GET parameters passed.
-        $query = isset($this->request->resource) ? $this->request->resource : '';
-        if ( $offset = strpos($query, '?') )
+        // Get the query string without the eventual parameters passed.
+        if ( $offset = strpos($path, '?') )
         {
-            $query = substr($query, 0, $offset);
+            $path = substr($path, 0, $offset);
         }
 
         // Try each route
         foreach ( $this->_routes as $route )
         {
-            $rx = '/^' . $route['rx'] . '$/';
             $matches = array();
 
             // Found a match ?
-            if ( preg_match($rx, $query, $matches) ) {
-
+            if ( preg_match($route['rx'], $path, $matches) )
+            {
+                $found = true;
                 $params = array();
-                $action = $route['controller'];
-                $method = $route['action'];
-                $path_key = $route['path'];
-                // Logs::debug("matched: " . $rx . " controller: " . $action . " action: " . $method);
-                if ( count($matches) > 1 ) {
+                $route_path = $route['path'];
+                $scheme = $route['scheme'];
+                if ( count($matches) > 1 )
+                {
                     $params = $this->get_route_params($matches, $route);
-                    unset($params['controller']);     // don't pollute $params
                 }
+                $params = $this->merge($scheme, $params);
                 break;
             }
         }
-        return array($action, $method, $params, $path_key);
+        if (!$found)
+        {
+            throw new RouteNotFound();
+        }
+        return array($scheme, $params, $route_path);
     }
 
     /**
      * Extract params from the request with the corresponding path matches
-     *
      * @param   Array    $matches    preg_match $match array
      * @param   Array    $route      corresponding route array
      * @return  Array    Hash of request values, with param names as keys.
@@ -223,33 +192,32 @@ class Route
                 $params[$name] = $matches[$param_count];
             }
 
-
-        }
-
-        if ( !array_key_exists('controller', $params) )
-        {
-            // This permits the value of a :named_match to be the routed action
-            if ( $route['controller'][0] == ':' )
-            {
-                $key = substr($route['controller'], 1, strlen($route['controller']));
-
-                if ( array_key_exists($key, $params) )
-                    $params['controller'] = $params[$key];
-            }
-
-            /*
-             * Check for an explicit controller-name in route, if
-             * no :action parameter was found inside the route rx.
-             */
-            if ( empty($params['controller']) )
-            {
-                $params['controller'] = $route['controller'];
-            }
         }
         return $params;
     }
-    
-    public function getComputedRoutes() {
-        return $this->_routes;
+
+    /**
+     * Merge params into scheme, removing ':' prefixed keys.
+     * @params Array $scheme
+     * @params Array $params
+     * @return Array cleaned params
+     */
+    private function merge($scheme, $params)
+    {
+        if(is_null($scheme)) return $params;
+        $params = array_merge($scheme, $params);
+        $remove = array();
+        foreach ($params as $key => $value)
+        {
+            // XXX is_integer is needed in case no regexp was set
+            //     in $scheme when add() was called. :(
+            if (is_integer($key) ||
+                substr($key, 0, 1) == ':')
+            {
+                $remove[] = $key;
+            }
+        }
+        foreach ($remove as $key) unset($params[$key]);
+        return $params;
     }
 }

@@ -41,13 +41,15 @@ class TestRequest extends UnitTestCase
     {
         $this->setServerEnv($good_method);
         $request = new RequestMapper();
-        $this->assertTrue($request->{'is'. ucfirst(strtolower($good_method))}, 'is'.ucfirst(strtolower($good_method)) .' should be true');
+        $this->assertTrue($request->{'is'. ucfirst(strtolower($good_method))}(),
+            'is'.ucfirst(strtolower($good_method)) .'() should be true');
         $methods = $request->getPossibleRequestMethods();
         foreach ($methods as $method)
         {
             if ($method == $good_method)
                 continue;
-            $this->assertFalse($request->{'is'. ucfirst(strtolower($method))}, 'is'.ucfirst(strtolower($good_method)) .' should be false');
+            $this->assertFalse($request->{'is'. ucfirst(strtolower($method))}(),
+                'is'.ucfirst(strtolower($good_method)) .' should be false');
         }
         $this->assertEqual($good_method, $request->getRequestMethod());
         $this->assertEqual($good_method, $request->method);
