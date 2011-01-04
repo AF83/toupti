@@ -8,6 +8,7 @@ require_once($root_path . '/testcase.php');
 require_once($root_path . '/request.php');
 require_once($root_path . '/response.php');
 require_once($root_path . '/route.php');
+require_once($root_path . '/middleware.php');
 require_once($root_path . '/controller.php');
 require_once($root_path . '/view.php');
 require_once($root_path . '/view_libs/adaptor.php');
@@ -23,6 +24,7 @@ class TouptiTestSuite extends TestSuite
         $this->addFile($test_dir .'/test_request.php');
         $this->addFile($test_dir .'/test_response.php');
         $this->addFile($test_dir .'/test_route.php');
+        $this->addFile($test_dir .'/test_middleware_stack.php');
         $this->addFile($test_dir .'/test_view.php');
         $this->addFile($test_dir .'/test_toupti.php');
         $this->addFile($test_dir .'/test_touptitestcase.php');

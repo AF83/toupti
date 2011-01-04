@@ -1,8 +1,5 @@
 <?php
 
-$libs_path = dirname( __FILE__ ) . '/../../../libs';
-require_once realpath($libs_path . "/toupti/middleware.php");
-
 class MockMiddlewareFollow extends Middleware {
  
     /**
