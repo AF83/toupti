@@ -106,6 +106,5 @@ class TestMiddlewareStack extends UnitTestCase
 
         $this->assertEqual($req->value, 0);
         $this->assertEqual($res->value, 1);
- 
     }
 }

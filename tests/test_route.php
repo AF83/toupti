@@ -19,6 +19,11 @@ class TestRoute extends UnitTestCase
         $this->assertEqual($route_path, $result[2]);
     }
 
+    public function testFindAppRoot()
+    {
+        $this->assertRouteResult('/', array('controller' => 'TestApp'), array('controller' => 'TestApp'), '');
+    }
+
     public function testAddRouteAndFind()
     {
         $scheme = array('controller' => 'test');

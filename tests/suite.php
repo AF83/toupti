@@ -3,13 +3,13 @@ $root_path = dirname(__FILE__) . '/..';
 require_once('simpletest/autorun.php');
 require_once('simpletest/web_tester.php');
 
-require_once($root_path . '/toupti.php');
 require_once($root_path . '/testcase.php');
 require_once($root_path . '/request.php');
 require_once($root_path . '/response.php');
 require_once($root_path . '/route.php');
 require_once($root_path . '/middleware.php');
 require_once($root_path . '/controller.php');
+require_once($root_path . '/toupti.php');
 require_once($root_path . '/view.php');
 require_once($root_path . '/view_libs/adaptor.php');
 require_once($root_path . '/view_libs/smarty.php');

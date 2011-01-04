@@ -24,55 +24,52 @@ class TestToupti extends UnitTestCase
     public function setUp()
     {
     }
-    
-    public function testExceptionWithoutRouteConf()
-    {
-        $this->expectException(new TouptiException('No route defined. Please create '. realpath(dirname(__FILE__) . '/..')  .'/conf/routes.php'));
-        $toupti = new Toupti(array());
-    }
 
-    public function testExceptionWithRouteConf()
+    public function runToupti($uri, $conf = null)
     {
-        $this->expectException(new TouptiException('No route defined. Please create '. dirname(__FILE__) . '/data/route_error.php'));
-        $toupti = Toupti::instance(array('route_path' => dirname(__FILE__) .'/data/route_error.php'));
+        if(is_null($conf))
+        {
+            $conf = array('route' => dirname(__FILE__).'/data/routes.php');
+        }
+        $_SERVER['REQUEST_URI'] = $uri;
+        $this->req = new Request();
+        $this->res = new TouptiResponse();
+        
+        $this->app = new MiddlewareStack();
+        
+        $this->toupti = new Toupti($conf);
+        
+        $this->app->add($this->toupti);
+        $this->app->run($this->req, $this->res);
+    }
+    
+    public function testEmptyRoute()
+    {
+        $this->expectException(new TouptiException('Error 404 /404', 404));
+        $this->runToupti('/404', array());
     }
 
     public function testRouteSuccess()
     {
-        $toupti = Toupti::instance(array('route_path' => dirname(__FILE__).'/data/routes.php'));
-        $_SERVER['REQUEST_URI'] = '/';
-        $this->assertEqual('plop', $toupti->run());
-    }
-
-    public function testRouteWith404()
-    {
-        $_SERVER['REQUEST_URI'] = '/404';
-        $toupti = Toupti::instance(array('route_path' => dirname(__FILE__).'/data/routes.php'));
-        $this->expectException(new TouptiException('Error 404 /404', 404));
-        $toupti->run();
+        $this->runToupti('/');
+        $this->assertEqual('plop', $this->res->body);
     }
 
     public function testRouteWith403()
     {
-        $_SERVER['REQUEST_URI'] = '/403';
-        $toupti = Toupti::instance(array('route_path' => dirname(__FILE__).'/data/routes.php'));
         $this->expectException(new TouptiException('access_not_allowed', 403));
-        $toupti->run();
+        $this->runToupti('/403');
     }
 
     public function testRouteControllerError()
     {
-        $_SERVER['REQUEST_URI'] = '/unknow';
-        $toupti = Toupti::instance(array('route_path' => dirname(__FILE__).'/data/routes.php'));
         $this->expectException(new TouptiException('Route error. Controller UnknowController not found for /unknow.', 404));
-        $toupti->run();
+        $this->runToupti('/unknow');
     }
 
     public function testRouteActionError()
     {
-        $_SERVER['REQUEST_URI'] = '/unknow_action';
-        $toupti = Toupti::instance(array('route_path' => dirname(__FILE__).'/data/routes.php'));
         $this->expectException(new TouptiException('Route error. Action plop not exist in MyController for /unknow_action.', 404));
-        $toupti->run();
+        $this->runToupti('/unknow_action');
     }
 }
