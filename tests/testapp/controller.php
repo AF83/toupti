@@ -11,29 +11,29 @@ class TestAppController extends Controller
     {
         $view = $this->getView();
         $view->assign('test', 'plop');
-        $view->assign('param', $this->params['param']);
+        $view->assign('param', self::$req->params['param']);
         return $view;
     }
 
     public function index()
     {
         $view = $this->getView();
-        $view->assign('param', $this->params['param']);
-        $view->assign('param2', $this->params['param2']);
+        $view->assign('param', self::$req->params['param']);
+        $view->assign('param2', self::$req->params['param2']);
         return $view;
     }
 
     public function post()
     {
         $view = $this->getView();
-        $view->assign('email', $this->params['email']);
+        $view->assign('email', self::$req->params['email']);
         return $view;
     }
 
     public function post_with_get_params()
     {
         $view = $this->getView();
-        $view->assign('getparams', count($this->params));
+        $view->assign('getparams', count(self::$req->params));
         return $view;
     }
 
@@ -46,8 +46,8 @@ class TestAppController extends Controller
 
     public function error_500()
     {
-        $this->toupti->response->set_status(500);
-        $this->toupti->response->set_header('X-FOO', 'bar');
+        self::$res->set_status(500);
+        self::$res->set_header('X-FOO', 'bar');
         $view = $this->getView();
         $view->assign('foo', 'bar');
         return $view;

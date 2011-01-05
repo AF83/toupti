@@ -148,7 +148,7 @@ class Route
         }
         if (!$found)
         {
-            throw new RouteNotFound();
+            throw new RouteNotFound($path, '404');
         }
         return array($scheme, $params, $route_path);
     }

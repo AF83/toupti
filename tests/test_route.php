@@ -8,7 +8,7 @@ class TestRoute extends UnitTestCase
     public function setUp()
     {
         include realpath(dirname( __FILE__ ) . '/testapp/routes.php');
-        $this->route = $routes;
+        $this->route = $route;
     }
 
     protected function assertRouteResult($path, $def, $params, $route_path)
@@ -47,7 +47,7 @@ class TestRoute extends UnitTestCase
 
     public function testAddRouteAndNoMatch()
     {
-        $this->expectException(new RouteNotFound());
+        $this->expectException(new RouteNotFound('/test2011', 404));
         $this->route->find_route('/test2011');
     }
 
@@ -69,7 +69,7 @@ class TestRoute extends UnitTestCase
     {
         $scheme = array('controller' => 'test', 'action' => 'foo', ':chuck' => '[a-z]+');
         $this->route->add('test/:chuck', $scheme);
-        $this->expectException(new RouteNotFound());
+        $this->expectException(new RouteNotFound('/test/', 404));
         $this->route->find_route('/test/');
     }
 

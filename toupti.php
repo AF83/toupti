@@ -87,6 +87,10 @@ class Toupti extends Middleware
             include $this->conf['route'];
             $this->route = $route;
             // throw TouptiException if not instance of Route
+            if(!($this->route instanceOf Route))
+            {
+                throw new TouptiException("Unable to load route from {$this->conf['route']}.");
+            }
         } else {
             $this->route = new Route();
         }
@@ -109,21 +113,20 @@ class Toupti extends Middleware
         $this->response = $res;
 
         // Find an action for the query, and set params accordingly.
-        try{
-            list($scheme, $params, $path_key) = $this->route->find_route($this->request->original_uri);
-        } catch(RouteNotFound $exception) {
-            throw new TouptiException('Error 404 '. $this->request->original_uri, 404);
-        }
+        list($scheme, $params, $path_key) = $this->route->find_route($this->request->original_uri);
 
         // Update ourself
         $this->controller = $scheme['controller'];
         $this->action = isset($scheme['action']) ? $scheme['action'] : 'adefault';
         $this->path_key = $path_key;
 
+        // cleaning params from controller and action;
+        unset($params['action']);
+        unset($params['controller']);
+
         // Merge route params with POST/GET/ressource values
         $params = array_merge($params, $this->request->post(), $this->request->get()); // FIXME Possible CSRF attacks here
         $this->request->params = $params;
-
         $controller_class = ucfirst($this->controller)."Controller";
         $this->call_action($controller_class, $this->action);
 

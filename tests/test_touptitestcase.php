@@ -6,7 +6,7 @@ class TestTouptiTestCase extends TouptiTestCase
 {
     public function touptiConf()
     {
-        return array('toupti' => array('route_path' => dirname(__FILE__) .'/testapp/routes.php'),
+        return array('toupti' => array('route' => dirname(__FILE__) .'/testapp/routes.php'),
                      'view'   => 'Mock',
                      'viewConf' => array()
                      );
@@ -15,7 +15,7 @@ class TestTouptiTestCase extends TouptiTestCase
     public function testGet()
     {
         $this->get('/', array('param'=> 'plip'));
-        $view = $this->getTouptiResponse();
+        $view = $this->getTouptiResponse()->body;
         $this->assertEqual($view->get('test') ,'plop');
         $this->assertEqual($view->get('param') ,'plip');
         $this->assertEqual($this->getUrl(), '/?param=plip');
@@ -26,7 +26,7 @@ class TestTouptiTestCase extends TouptiTestCase
     public function testGetWithMoreParam()
     {
         $this->get('/index', array('param'=> 'plip', 'param2' => 'plop'));
-        $view = $this->getTouptiResponse();
+        $view = $this->getTouptiResponse()->body;
         $this->assertEqual($view->get('param') ,'plip');
         $this->assertEqual($view->get('param2') ,'plop');
         $this->assertEqual($this->getUrl(), '/index?param=plip&param2=plop');
@@ -35,7 +35,7 @@ class TestTouptiTestCase extends TouptiTestCase
     public function testPost()
     {
         $this->post('/post', array('email' => 'test@example.net'));
-        $view = $this->getTouptiResponse();
+        $view = $this->getTouptiResponse()->body;
         $this->assertEqual($view->get('email') ,'test@example.net');
         $this->assertEqual($this->getUrl(), '/post');
     }
@@ -43,7 +43,7 @@ class TestTouptiTestCase extends TouptiTestCase
     public function testPostWithGetParams()
     {
         $this->post('/post_with_get_params?foo=bar&chuck=norris', array());
-        $view = $this->getTouptiResponse();
+        $view = $this->getTouptiResponse()->body;
         $this->assertEqual($view->get('getparams'), 2);
         $this->assertEqual($this->getUrl(), '/post_with_get_params?foo=bar&chuck=norris');
     }
@@ -86,7 +86,7 @@ class TestTouptiTestCase extends TouptiTestCase
     public function testGetContext()
     {
         $this->get('/multiple_template');
-        $context = $this->getTouptiResponse()->getContext();
+        $context = $this->getTouptiResponse()->body->getContext();
         $this->assertEqual($context['testapp/test.tpl']['foo'], 'bar');
         $this->assertEqual($context['testapp/chuck.tpl']['param'], '2');
     }

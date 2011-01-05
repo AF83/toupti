@@ -43,9 +43,15 @@ class TestToupti extends UnitTestCase
         $this->app->run($this->req, $this->res);
     }
     
+    public function testWrongConfFile()
+    {
+        $conf = array('route' => dirname(__FILE__).'/data/wrong_routes.php');
+        $this->expectException(new TouptiException("Unable to load route from {$conf['route']}."));
+        $this->runToupti('/404', $conf);
+    }
     public function testEmptyRoute()
     {
-        $this->expectException(new TouptiException('Error 404 /404', 404));
+        $this->expectException(new RouteNotFound('/404', 404));
         $this->runToupti('/404', array());
     }
 

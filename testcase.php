@@ -7,45 +7,62 @@ class TouptiSocket
 {
     public function __construct($url, $encoding, $toupticonf)
     {
-        $this->toupticonf = $toupticonf;
         $this->url = $url;
         $this->encoding = $encoding;
-        View::reset();
+        $this->toupticonf = $toupticonf;
+        
+        $this->setRequest();
+        $this->setResponse();
+        $this->setApp();
+
+        $this->app->run($this->request, $this->response);
+        $this->first = true;
+    }
+
+    public function setRequest()
+    {
+
         $_SERVER  = array();
         $_GET     = array();
         $_POST    = array();
         $_REQUEST = array();
         $_FILES   = array();
-        if ($encoding->getMethod() != 'POST')
+
+        if ($this->encoding->getMethod() != 'POST')
         {
-            $this->fillGet($encoding);
+            $this->fillGet($this->encoding);
         }
         else
         {
-            $this->fillPost($encoding);
-            $this->fillGet($url->_request);
+            $this->fillPost($this->encoding);
+            $this->fillGet($this->url->_request);
         }
         $url = $this->url->asString();
         $_SERVER['REQUEST_URI'] = $url;
         $_SERVER['REQUEST_METHOD'] = $this->encoding->getMethod();
-
-        // env is set, prepare our $req and $res object
+        
         $this->request = new RequestMapper();
-        $this->request->notify = array();
-        $this->response = new TouptiResponse();
+    }
 
-        // fix to handle middleware stack and Controller initialisation context.
+    public function setResponse()
+    {
+        $this->response = new TouptiResponse();
+    }
+
+    public function setApp()
+    {
+        View::reset();
+        View::useLib('MockTest');
+        View::conf($this->toupticonf['viewConf']);
+        MocktestView::useLib($this->toupticonf['view'].'View');
+
         Controller::setResponse($this->response);
         Controller::setRequest($this->request);
         
-        View::useLib('MockTest');
-        View::conf($toupticonf['viewConf']);
-        MocktestView::useLib($toupticonf['view'].'View');
+        $this->app = new MiddlewareStack();
+        $this->toupti = new Toupti($this->toupticonf['toupti']);
+        $this->app->add($this->toupti);
 
-        $this->toupti = new Toupti();
-        require $this->toupticonf['toupti']['routes'];
-        $this->toupti->run($route, $this->request, $this->response);
-        $this->first = true;
     }
 
     protected function fillGet($encoding)
