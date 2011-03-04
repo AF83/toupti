@@ -118,7 +118,7 @@ class MiddlewareStack
         }
     }
 
-    public function run($req, $res)
+    public function run($req = null, $res = null)
     {
         if(count($this->stack) > 0 )
         {
