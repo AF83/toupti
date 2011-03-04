@@ -170,4 +170,20 @@ class TestMiddlewareStack extends UnitTestCase
         $this->assertEqual($req->value, 0);
         $this->assertEqual($res->value, 2);
     }
+
+    public function testRetreiveList()
+    {
+        $app = new MiddlewareStack();
+        $one = new MockMiddlewareInc();
+        $two = new MockMiddlewareFollow();
+        $truie = new MockMiddlewareNotFollow();
+        $app->add($one);
+        $app->add($two);
+        $app->add($truie);
+
+        $s = $app->getStack();
+        $this->assertEqual($s[0], $one);
+        $this->assertEqual($s[1], $two);
+        $this->assertEqual($s[2], $truie);
+    }
 }

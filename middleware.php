@@ -89,6 +89,11 @@ class MiddlewareStack
         $this->stack[] = $middleware;
     }
 
+    function getStack()
+    {
+        return $this->stack;
+    }
+
     /**
      * replace a middleware by another.
      */

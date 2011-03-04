@@ -158,8 +158,6 @@ class Request
         $this->accept       = $this->parseAcceptHeaders(isset($_SERVER['HTTP_ACCEPT']) ? $_SERVER['HTTP_ACCEPT'] : NULL);
         $this->headers      = $this->getRequestHeaders();
         $this->original_uri = $_SERVER['REQUEST_URI'];
-        $this->host         = $this->getRequestHost();
-
 
         $this->resource = $this->extractQueryString();
         $this->get =  $_GET;
@@ -192,13 +190,20 @@ class Request
      */
     protected function getRequestHost()
     {
-
-        if (isset($_SERVER["HTTP_X_FORWARDED_HOST"])){$vhost=$_SERVER["HTTP_X_FORWARDED_HOST"];}
+        if (isset($_SERVER["HTTP_X_FORWARDED_HOST"]))
+        {
+            $vhost = $_SERVER["HTTP_X_FORWARDED_HOST"];
+        }
         else
         {
-            if (isset ($_SERVER["HTTP_HOST"])) $vhost = $_SERVER["HTTP_HOST"];
+            if (isset($_SERVER["HTTP_HOST"]))
+            {
+                $vhost = $_SERVER["HTTP_HOST"];
+            }
             else
+            {
                 $vhost = $_SERVER["SERVER_NAME"];
+            }
         }
         return $vhost;
     }
