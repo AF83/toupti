@@ -11,7 +11,7 @@ class TestResponse extends UnitTestCase
         $this->assertEqual($headers['Status'], 'HTTP/1.1 200 OK');
     }
 
-     public function testSetStatus500()
+    public function testSetStatus500()
     {
         $response = new TouptiResponse();
         $response->set_status(500);

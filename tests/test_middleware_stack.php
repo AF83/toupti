@@ -107,4 +107,25 @@ class TestMiddlewareStack extends UnitTestCase
         $this->assertEqual($req->value, 0);
         $this->assertEqual($res->value, 1);
     }
+
+    public function testRunning3IncsAndReplace()
+    {
+        $app = new MiddlewareStack();
+        $to_replace = new MockMiddlewareInc();
+        $app->add(new MockMiddlewareInc());
+        $app->add($to_replace);
+        $app->add(new MockMiddlewareInc());
+
+        $app->replace($to_replace, new MockMiddlewareFollow());
+        
+        $res = new StdClass();
+        $res->value = 0;
+        $req = new StdClass();
+        $req->value = 0;
+        
+        $app->run($req, $res);
+        
+        $this->assertEqual($req->value, 0);
+        $this->assertEqual($res->value, 2);
+    }
 }

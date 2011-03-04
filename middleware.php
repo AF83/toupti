@@ -89,6 +89,30 @@ class MiddlewareStack
         $this->stack[] = $middleware;
     }
 
+    /**
+     * replace a middleware by another.
+     */
+    function replace($old, $new)
+    {
+        foreach($this->stack as $key => $middleware)
+        {
+            if($middleware == $old)
+            {
+                //there is a previous
+                if($key > 0)
+                {
+                    $this->stack[$key - 1]->setNextMiddleware($new);
+                }
+                $this->stack[$key] = $new;
+                //there is a follower
+                if($key < sizeof($this->stack) - 1)
+                {
+                    $new->setNextMiddleware($this->stack[$key + 1]);
+                }
+            }
+        }
+    }
+
     public function run($req, $res)
     {
         if(count($this->stack) > 0 )
